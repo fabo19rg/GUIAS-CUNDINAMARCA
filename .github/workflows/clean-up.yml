@@ -1,0 +1,29 @@
+name: Limpieza de guías antiguas
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # cada día a las 03:00 UTC
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Eliminar guías con más de 7 días
+        run: |
+          DIR="GUIAS-CUNDINAMARCA"
+          MAX_DAYS=7
+          find "$DIR" -type f -mtime +"$MAX_DAYS" -print -exec git rm {} \;
+
+      - name: Commit y push de los cambios
+        run: |
+          if git diff --quiet; then
+            echo "Nada que borrar"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git commit -m "🧹 Eliminar guías con más de $MAX_DAYS días"
+          git push
